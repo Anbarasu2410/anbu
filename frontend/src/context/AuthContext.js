@@ -1,102 +1,40 @@
-// import React, { createContext, useContext, useState, useEffect } from "react";
-// import { loginApi, selectCompanyApi } from "../api/authApi";
-
-// const AuthContext = createContext();
-
-// export const AuthProvider = ({ children }) => {
-//   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
-//   const [companies, setCompanies] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     // Safe load companies from sessionStorage
-//     try {
-//       const storedCompanies = sessionStorage.getItem("companies");
-//       setCompanies(storedCompanies ? JSON.parse(storedCompanies) : []);
-//     } catch (err) {
-//       console.error("Failed to parse companies from sessionStorage", err);
-//       setCompanies([]);
-//     }
-//     setLoading(false);
-//   }, []);
-
-//   // Login: calls existing loginApi and updates state
-//   const login = async (email, password) => {
-//     const res = await loginApi({ email, password });
-
-//     if (!res?.data) throw new Error("Invalid response from server");
-
-//     if (res.data.autoSelected) {
-//       localStorage.setItem("token", res.data.token);
-//       setToken(res.data.token);
-//       return { autoSelected: true, token: res.data.token };
-//     }
-
-//     const companyList = res.data.companies || [];
-//     setCompanies(companyList);
-
-//     try {
-//       sessionStorage.setItem("companies", JSON.stringify(companyList));
-//     } catch (err) {
-//       console.error("Failed to store companies in sessionStorage", err);
-//     }
-
-//     return { autoSelected: false, companies: companyList };
-//   };
-
-//   // Select a company
-//   const selectCompany = async (companyId) => {
-//     const res = await selectCompanyApi({ companyId });
-//     if (!res?.data?.token) throw new Error("Invalid response from server");
-
-//     localStorage.setItem("token", res.data.token);
-//     setToken(res.data.token);
-
-//     sessionStorage.removeItem("companies");
-//     setCompanies([]);
-
-//     return res.data.token;
-//   };
-
-//   const logout = () => {
-//     localStorage.clear();
-//     sessionStorage.clear();
-//     setToken(null);
-//     setCompanies([]);
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ token, login, logout, selectCompany, companies, loading }}>
-//       {!loading && children}
-//     </AuthContext.Provider>
-//   );
-// };
-
-// export const useAuth = () => useContext(AuthContext);
-
-import { createContext, useContext, useState } from 'react';
+// context/AuthContext.jsx
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
-  const [company, setCompany] = useState(null);
-  const [permissions, setPermissions] = useState([]);
+  const [user, setUser] = useState(() => {
+    return JSON.parse(localStorage.getItem("user")) || null;
+  });
 
-  const loginSuccess = (data) => {
-    setToken(data.token);
-    setCompany(data.company);
-    setPermissions(data.permissions);
-    localStorage.setItem('token', data.token);
+  // Listen for login/logout events
+  useEffect(() => {
+    const handler = () => setUser(JSON.parse(localStorage.getItem("user")));
+    window.addEventListener("userDataUpdated", handler);
+    return () => window.removeEventListener("userDataUpdated", handler);
+  }, []);
+
+  const login = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+    window.dispatchEvent(new Event("userDataUpdated"));
+  };
+
+  const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    window.dispatchEvent(new Event("userDataUpdated"));
   };
 
   return (
-    <AuthContext.Provider value={{
-      token, company, permissions, loginSuccess
-    }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDashboardSummary } from '../controllers/dashboardController.js';
+import { getDashboardSummary } from '../controllers/bossDashboardController.js';
 import  authMiddleware  from '../middleware/authMiddleware.js';
 import  permissionMiddleware  from '../middleware/permissionMiddleware.js';
 

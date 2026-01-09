@@ -1,18 +1,47 @@
-// AttendanceSnapshot.js
-import React from 'react';
+import { Card } from 'antd';
 
-const AttendanceSnapshot = ({ attendance }) => (
-  <div className="border-2 border-gray-400 bg-white rounded-lg font-mono w-full">
-    {/* Header */}
-    <div className="px-4 py-2 border-b border-gray-400 font-bold uppercase text-gray-800">
-      TODAY’S ATTENDANCE SNAPSHOT
-    </div>
+const AttendanceSnapshot = ({ attendance }) => {
+  if (!attendance) {
+    return (
+      <Card title="Attendance Snapshot">
+        No attendance data available.
+      </Card>
+    );
+  }
 
-    {/* Content */}
-    <div className="px-4 py-2 text-sm text-gray-800 whitespace-pre">
-      {`Present: ${attendance.present} | Absent: ${attendance.absent} | Late: ${attendance.late}`}
-    </div>
-  </div>
-);
+  return (
+    <Card title="Attendance Snapshot" bordered>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div>
+          <div className="text-gray-500 text-sm">Present</div>
+          <div className="text-2xl font-bold">
+            {attendance.present}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-gray-500 text-sm">Absent</div>
+          <div className="text-2xl font-bold">
+            {attendance.absent}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-gray-500 text-sm">Late</div>
+          <div className="text-2xl font-bold">
+            {attendance.late ?? 0}
+          </div>
+        </div>
+
+        <div>
+          <div className="text-gray-500 text-sm">Total</div>
+          <div className="text-2xl font-bold">
+            {attendance.total}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 export default AttendanceSnapshot;

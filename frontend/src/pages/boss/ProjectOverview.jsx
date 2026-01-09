@@ -4,16 +4,16 @@ import {
   getProjectOverview,
   getProgressTimeline,
   getAttendanceSnapshot,
- // getFleetStatus,
-  getAIRiskAnalysis
-} from '../api/bossProjectApi';
+  //getAIRiskAnalysis,
+  // getFleetStatus, // Fleet task API commented out
+} from '../../api/bossProjectApi';
 
-import ProjectHeader from '../components/ProjectHeader';
-import PlannedVsActual from '../components/PlannedVsActual';
-import AIRiskPanel from '../components/AIRiskPanel';
-import ProgressTimeline from '../components/ProgressTimeline';
-import ManpowerSnapshot from '../components/ManpowerSnapshot';
-import FleetStatus from '../components/FleetStatus';
+import ProjectHeader from '../../components/ProjectHeader';
+import PlannedVsActual from '../../components/PlannedVsActual';
+import AIRiskPanel from '../../components/AIRiskPanel';
+import ProgressTimeline from '../../components/ProgressTimeline';
+import ManpowerSnapshot from '../../components/ManpowerSnapshot';
+// import FleetStatus from '../../components/FleetStatus'; // Fleet task component commented out
 
 const ProjectOverview = () => {
   const { projectId } = useParams();
@@ -22,57 +22,65 @@ const ProjectOverview = () => {
   const [overview, setOverview] = useState(null);
   const [timeline, setTimeline] = useState([]);
   const [attendance, setAttendance] = useState(null);
-  const [fleet, setFleet] = useState(null);
-  const [aiRisk, setAiRisk] = useState(null);
+//   const [aiRisk, setAiRisk] = useState(null);
+  // const [fleet, setFleet] = useState(null); // Fleet state commented out
 
   useEffect(() => {
-    loadData();
+    if (projectId) loadData();
   }, [projectId]);
 
   const loadData = async () => {
-    const [ov, tl, at, fl] = await Promise.all([
-      getProjectOverview(projectId),
-      getProgressTimeline(projectId),
-      getAttendanceSnapshot(projectId, today),
-      getFleetStatus(projectId, today)
-    ]);
+    try {
+      const [ov, tl, at /*, fl*/] = await Promise.all([
+        getProjectOverview(projectId),
+        getProgressTimeline(projectId),
+        getAttendanceSnapshot(projectId, today),
+        // getFleetStatus(projectId, today), // Fleet API call commented out
+      ]);
 
-    setOverview(ov.data);
-    setTimeline(tl.data.timeline);
-    setAttendance(at.data);
-    setFleet(fl.data);
+      setOverview(ov.data);
+      setTimeline(tl.data.timeline);
+      setAttendance(at.data);
+      // setFleet(fl.data); // Fleet data set commented out
 
-    // AI Payload
-    const aiPayload = {
-      projectCode: ov.data.project.projectCode,
-      plannedProgress: ov.data.plannedVsActual.plannedProgress,
-      actualProgress: ov.data.plannedVsActual.actualProgress,
-      manpower: at.data,
-      fleetIssues: fl.data.delayed,
-      permitStatus: "PENDING",
-      daysDelayed: 10
-    };
+      const aiPayload = {
+        projectCode: ov.data.project.projectCode,
+        plannedProgress: ov.data.plannedVsActual.plannedProgress,
+        actualProgress: ov.data.plannedVsActual.actualProgress,
+        manpower: at.data,
+        // fleetIssues: fl.data.delayed, // Fleet issues commented out
+        permitStatus: 'PENDING',
+        daysDelayed: 10,
+      };
 
-    const aiRes = await getAIRiskAnalysis(aiPayload);
-    setAiRisk(aiRes.data);
+     // const aiRes = await getAIRiskAnalysis(aiPayload);
+     // setAiRisk(aiRes.data);
+    } catch (err) {
+      console.error('ProjectOverview load error:', err);
+    }
   };
 
   if (!overview) return <div>Loading...</div>;
 
   return (
-    <div className="project-overview">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+      {/* Project Header with heading inside card */}
       <ProjectHeader project={overview.project} />
 
-      <div className="grid-2">
+      {/* Top summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <PlannedVsActual data={overview.plannedVsActual} />
-        <AIRiskPanel risk={aiRisk} />
+        {/* <AIRiskPanel risk={aiRisk} /> */}
       </div>
 
+      {/* Progress Timeline */}
       <ProgressTimeline timeline={timeline} />
 
+      {/* Manpower Snapshot */}
       <ManpowerSnapshot data={attendance} />
 
-      <FleetStatus data={fleet} />
+      {/* Fleet component commented out */}
+      {/* <FleetStatus data={fleet} /> */}
     </div>
   );
 };

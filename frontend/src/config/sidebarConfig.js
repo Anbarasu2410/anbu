@@ -26,11 +26,35 @@ export const SIDEBAR_CONFIG = [
   },
   {
   key: '/boss/dashboard',
-  label: 'Executive Dashboard',
+  label: ' Dashboard',
   icon: DashboardOutlined,
   permission: 'DASHBOARD_VIEW',
   path: '/boss/dashboard',
 },
+// {
+//   key: '/boss/projects/:projectId',
+//   label: 'Project Details',
+//   icon: ProjectOutlined,
+//   path: '/boss/projects/1',
+//   permission:'PROJECT_OVERVIEW_VIEW',
+//   //permissions: ['PROJECT_OVERVIEW_VIEW', 'PROJECT_PROGRESS_VIEW', 'AI_RISK_VIEW'],
+// },
+{
+  key: '/boss/projects',
+  label: 'Projects',
+  icon: ProjectOutlined,
+  path: '/boss/projects',
+  permission: 'PROJECT_OVERVIEW_VIEW'
+},
+
+{
+    key: '/boss/reports',
+    label: 'Reports Dashboard',
+    icon: FileTextOutlined,
+    path: '/boss/reports',
+    permission: 'REPORT_VIEW'
+  },
+
 
 
   // Execution

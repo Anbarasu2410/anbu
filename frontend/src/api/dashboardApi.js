@@ -10,9 +10,10 @@ API.interceptors.request.use(config => {
   return config;
 });
 
-export const fetchDashboardSummary = (companyId, date) => {
+export const fetchDashboardSummary = (payload) => {
+    
   return API.get('/boss/dashboard/summary', {
-    params: { companyId, date }
+    params: { companyId:payload.companyId, date:payload.date}
   });
 };
 export const fetchAISummary = (payload) => {

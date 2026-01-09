@@ -1,15 +1,22 @@
-// AISummaryPanel.js
-import React from 'react';
+import { Card, Empty } from 'antd';
 
-const AISummaryPanel = ({ summary }) => (
-  <div className="border-2 border-gray-400 bg-white p-4 rounded-lg">
-    <h4 className="font-bold uppercase mb-2 text-gray-800">🔹 AI Daily Summary</h4>
-    <ul className="list-disc list-inside space-y-1 text-sm text-gray-800">
-      {summary.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  </div>
-);
+const AISummaryPanel = ({ summary = [] }) => {
+  return (
+    <Card title="AI Insights" bordered>
+      {summary.length === 0 ? (
+        <Empty
+          description="No AI insights available"
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
+      ) : (
+        <ul className="space-y-2 list-disc pl-5 text-gray-700">
+          {summary.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+};
 
 export default AISummaryPanel;

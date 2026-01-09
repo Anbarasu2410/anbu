@@ -1,61 +1,66 @@
-import React from "react";
+// TopHeader.jsx
+import React, { useState, useEffect } from "react";
 import { Dropdown, Avatar, Button } from "antd";
-import {
-  MoonOutlined,
-  UserOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
+import { MoonOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { SIDEBAR_CONFIG } from "../config/sidebarConfig";
-import { getAuthUser, logout } from "../auth/auth";
 
+// ✅ Helper functions
+const getAuthUser = () => {
+  return JSON.parse(localStorage.getItem("user")) || null;
+};
+
+const logout = () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
+  window.dispatchEvent(new Event("userDataUpdated"));
+};
 
 const TopHeader = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ MINIMUM FIX: read user from localStorage
-  const userData = getAuthUser() || {};
+  const [userData, setUserData] = useState(getAuthUser());
 
-  // 🔥 Dynamic page title
-  const currentPage = (() => {
-    const pathname = location.pathname;
+  // Listen to updates (e.g., login or company switch)
+  useEffect(() => {
+    const handleUpdate = () => setUserData(getAuthUser());
+    window.addEventListener("userDataUpdated", handleUpdate);
+    return () => window.removeEventListener("userDataUpdated", handleUpdate);
+  }, []);
 
-    const exact = SIDEBAR_CONFIG.find(
-      (item) => item.path === pathname
-    );
-    if (exact) return exact.label;
+  // 🔹 Determine current page label from sidebarConfig recursively
+  const findLabel = (items, pathname) => {
+    for (const item of items) {
+      if (item.path === pathname) return item.label;
+      if (item.children) {
+        const label = findLabel(item.children, pathname);
+        if (label) return label;
+      }
+    }
+    return "";
+  };
 
-    const partial = SIDEBAR_CONFIG
-      .filter((item) => pathname.startsWith(item.path))
-      .sort((a, b) => b.path.length - a.path.length)[0];
-
-    return partial?.label || "";
-  })();
+  const currentPage = findLabel(SIDEBAR_CONFIG, location.pathname);
 
   const userMenuItems = [
     {
       key: "user-info",
       label: (
-        <div className="px-2 py-1 flex items-center space-x-3">
-          <Avatar
-            size="large"
-            src={userData.avatar}
-            icon={!userData.avatar && <UserOutlined />}
-            className="border-2 border-gray-200"
-          />
-          <div>
-            {/* <div className="font-semibold">
-              <span className="font-bold">
-                {userData.name || userData.username || "User"}
-              </span>
-              <span className="text-green-500 ml-1">Pro</span>
-            </div> */}
-            {/* ✅ EMAIL NOW WORKS */}
-            <div className="text-gray-500 text-sm">
-              {userData.email}
+        <div className="px-2 py-1 flex flex-col">
+          <div className="flex items-center space-x-3 mb-1">
+            <Avatar
+              size="large"
+              src={userData?.avatar}
+              icon={!userData?.avatar && <UserOutlined />}
+              className="border-2 border-gray-200"
+            />
+            <div className="flex flex-col">
+              <span className="font-semibold">{userData?.role || "User"}</span>
+              <span className="text-gray-500 text-sm">{userData?.company?.name || ""}</span>
             </div>
           </div>
+          <div className="text-gray-500 text-sm">{userData?.email}</div>
         </div>
       ),
       disabled: true,
@@ -79,7 +84,6 @@ const TopHeader = ({ onToggleSidebar }) => {
     },
   ];
 
-  // Hamburger Icon
   const HamburgerIcon = () => (
     <div className="w-6 h-6 flex flex-col justify-between cursor-pointer">
       <div className="w-full h-0.5 bg-white rounded"></div>
@@ -93,9 +97,7 @@ const TopHeader = ({ onToggleSidebar }) => {
       {/* Left */}
       <div className="flex items-center space-x-3 sm:space-x-4 flex-1">
         <img src="/logo.jpg" alt="Logo" className="h-8 w-auto" />
-        <div className="text-white text-lg font-bold hidden sm:block">
-          ERP
-        </div>
+        <div className="text-white text-lg font-bold hidden sm:block">ERP</div>
         <div
           onClick={onToggleSidebar}
           className="cursor-pointer p-2 hover:bg-blue-300 rounded-lg transition-colors"
@@ -106,9 +108,7 @@ const TopHeader = ({ onToggleSidebar }) => {
 
       {/* Center */}
       <div className="flex-1 flex justify-center">
-        <div className="text-white text-lg font-semibold">
-          {currentPage}
-        </div>
+        <div className="text-white text-lg font-semibold">{currentPage}</div>
       </div>
 
       {/* Right */}
@@ -130,8 +130,8 @@ const TopHeader = ({ onToggleSidebar }) => {
           >
             <Avatar
               size="default"
-              src={userData.avatar}
-              icon={!userData.avatar && <UserOutlined />}
+              src={userData?.avatar}
+              icon={!userData?.avatar && <UserOutlined />}
               className="border-2 border-white"
             />
           </div>
@@ -142,3 +142,5 @@ const TopHeader = ({ onToggleSidebar }) => {
 };
 
 export default TopHeader;
+
+

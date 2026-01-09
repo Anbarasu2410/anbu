@@ -1,11 +1,16 @@
-// KPIStatCard.js
-import React from 'react';
+import { Card } from 'antd';
 
-const KPIStatCard = ({ title, value }) => (
-  <div className="border-2 border-gray-400 bg-white p-4 flex flex-col items-center justify-center rounded-lg min-h-[110px]">
-    <div className="text-sm font-semibold uppercase text-gray-800 text-center">{title}</div>
-    <div className="text-2xl font-bold text-gray-900 mt-2">{value}</div>
-  </div>
-);
+const KPIStatCard = ({ title, value }) => {
+  return (
+    <Card bordered className="shadow-sm">
+      <div className="text-gray-500 text-sm uppercase tracking-wide">
+        {title}
+      </div>
+      <div className="text-3xl font-bold text-gray-900 mt-1">
+        {value ?? '—'}
+      </div>
+    </Card>
+  );
+};
 
 export default KPIStatCard;

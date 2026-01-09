@@ -9,17 +9,9 @@ import ProjectDailyProgress from '../models/ProjectDailyProgressModel.js';
 export const getProjectOverview = async (req, res) => {
   try {
     const projectId = Number(req.params.projectId);
-
     if (Number.isNaN(projectId)) {
       return res.status(400).json({ message: 'Invalid projectId' });
     }
-
-    // 🔹 Today range (IMPORTANT)
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
 
     /* ---------------- PROJECT ---------------- */
     const project = await Project.findOne({ id: projectId }).lean();
@@ -41,7 +33,13 @@ export const getProjectOverview = async (req, res) => {
       }
     ]);
 
-    /* ---------------- ATTENDANCE ---------------- */
+    /* ---------------- ATTENDANCE (TODAY) ---------------- */
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
     const attendanceAgg = await Attendance.aggregate([
       {
         $match: {
@@ -65,26 +63,29 @@ export const getProjectOverview = async (req, res) => {
       }
     ]);
 
-    /* ---------------- DAILY PROGRESS ---------------- */
-    const dailyProgress = await ProjectDailyProgress.findOne({
-      projectId,
-      date: { $gte: startOfDay, $lte: endOfDay }
-    }).lean();
+    /* ---------------- LATEST PROGRESS (FIX) ---------------- */
+    const latestProgress = await ProjectDailyProgress
+      .findOne({ projectId })
+      .sort({ date: -1 })
+      .lean();
 
-    const actualProgress = dailyProgress?.overallProgress ?? 0;
+    const actualProgress = latestProgress?.overallProgress ?? 0;
 
     /* ---------------- PLANNED PROGRESS ---------------- */
-    const plannedProgress = project.expectedEndDate
-      ? Math.min(
-          100,
-          Math.round(
-            ((new Date() - new Date(project.startDate)) /
-              (new Date(project.expectedEndDate) -
-                new Date(project.startDate))) *
-              100
+    const plannedProgress =
+      project.startDate &&
+      project.expectedEndDate &&
+      project.expectedEndDate > project.startDate
+        ? Math.min(
+            100,
+            Math.round(
+              ((Date.now() - new Date(project.startDate)) /
+                (new Date(project.expectedEndDate) -
+                  new Date(project.startDate))) *
+                100
+            )
           )
-        )
-      : 0;
+        : 0;
 
     /* ---------------- RESPONSE ---------------- */
     res.json({
@@ -95,17 +96,16 @@ export const getProjectOverview = async (req, res) => {
         clientName: client?.name || null,
         status: project.status,
         startDate: project.startDate,
-        plannedEndDate: project.endDate,
+        plannedEndDate: project.
+actualEndDate,
         expectedEndDate: project.expectedEndDate,
         overallProgress: actualProgress
       },
-
       plannedVsActual: {
         plannedProgress,
         actualProgress,
         variance: actualProgress - plannedProgress
       },
-
       manpower: {
         required: manpowerAgg[0]?.required || 0,
         present: attendanceAgg[0]?.present || 0,
@@ -119,6 +119,7 @@ export const getProjectOverview = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 
 /* 2️⃣ GET PROJECT PROGRESS TIMELINE */
